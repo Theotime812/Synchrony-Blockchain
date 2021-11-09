@@ -1,0 +1,13 @@
+{
+	"name": "blockchain",
+	"displayName": "Blockchain",
+	"version": "1.0.0",
+	"synchronyVersion": "0.45",
+	"description": "Attack with a litteral blockchain!\nInspired by this tweet: https://twitter.com/NecroDancerGame/status/1457856904084922372",
+	"author": "Theotime812",
+	"dependencies": {},
+	"api": {"scriptPath":"src/"},
+	"icon": "blockchainIcon.png",
+	"banner": "blockchainBanner.png",
+	"tags": []
+}
