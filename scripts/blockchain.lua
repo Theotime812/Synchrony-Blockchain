@@ -1,32 +1,55 @@
+local customWeapons     = require "necro.game.data.item.weapon.CustomWeapons"
+local commonWeapon      = require "necro.game.data.item.weapon.CommonWeapon"
 local event             = require "necro.event.Event"
-local components        = require "necro.game.data.Components"
-local customEntities    = require "necro.game.data.CustomEntities"
+local currentLevel      = require "necro.game.level.CurrentLevel"
 local object            = require "necro.game.object.Object"
-dbg("mod loaded")
-local dev
-dev = true
 
-components.register {
-	baseBlockchain = {},
-}
-customEntities.extend {
-	name        = "baseBlockchain",
-	template    = customEntities.template.item("weapon_dagger"),
-	data = {
-		flyaway = "BLOCKCHAIN",
-		hint    = "DMG + WITH MONEY, MORE MONEY WITH COMBO",
-		slot    = "weapon"
-	},
+local dev = false
+
+local function minGoldAmount()
+	--[[
+		Defined by geometric sequence
+		with initial value is u(1) = 500
+		and common ratio is 2.
+		Index is the depth number of the current level.
+	]]
+	local init = 500
+	local commonRatio = 2
+	return init * commonRatio^(currentLevel.getDepth() - 1)
+end
+
+customWeapons.registerShape({
+	name                    = "Blockchain",
+	friendlyName            = "Blockchain",
+	hint                    = "Dmg + with enough money, keep on killing for more gold",
 	components = {
-		sprite = {
-			texture = "mods/blockchain/gfx/base.png"
+		weaponPattern = {
+			pattern = commonWeapon.pattern {
+				tiles = {
+					{ offset = { 1, 0 } }
+				}
+			}
 		}
+	},
+	texture                 = "mods/blockchain/gfx/texture.png",
+	excludeMaterials = {
+		"Electric",
+		"Jeweled",
+		"Frost",
+		"Phasing",
 	}
-}
+})
+
+event.holderDealDamage.add("goldAmountMultiplier", {order = "baseMultiplier", filter = "blockchain_weaponTypeBlockchain"}, function(ev)
+	if (ev.holder.goldCounter and ev.holder.goldCounter.amount >= minGoldAmount()) then
+		ev.damage = ev.damage * 2;
+	end
+end)
 
 if dev then
 	event.levelLoad.add("spawn", {order="entities"}, function (ev)
-		object.spawn("blockchain_baseBlockchain",-1,-1)
+		object.spawn("blockchain_WeaponGoldBlockchain",0,0)
+		object.spawn("RingGold",0,0)
+		object.spawn("FeetBalletShoes",0,0)
 	end)
-	dbg("dev mode")
 end
