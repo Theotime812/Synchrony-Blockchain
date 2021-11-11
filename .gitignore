@@ -130,3 +130,6 @@ luac.out
 
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij+iml,lua
+
+# pixil files
+*.pixil
