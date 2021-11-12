@@ -7,7 +7,7 @@ local attack            = require "necro.game.character.Attack"
 
 dbg("(re)loaded")
 
-local dev = false
+local dev = true
 
 local function minGoldAmount()
 	--[[
@@ -30,7 +30,6 @@ customWeapons.registerShape({
 			pattern =  {
 				passWalls = true, swipe = "dagger",
 				dashDirection = action.Direction.RIGHT, -- Same direction as attack
-				direction = 7,
 				tiles = { {
 					-- Enemy exactly one tile in front of holder
 					offset = {1,0},
@@ -38,19 +37,25 @@ customWeapons.registerShape({
 					dashDirection = false, -- Useless, but more understandable
 				}, {
 					-- Enemy one tile away, diagonally (on the left)
-					offset = {1,1}
+					offset = {1,1},
+					clearance = {{1,0}},
+					direction = action.Direction.DOWN -- enemy is hit at their right
 				}, {
 					-- Enemy one tile away, diagonally (on the right).
 					-- Same pattern as the previous one, except offset(y) is negative
-					offset = {1,-1}
+					offset = {1,-1},
+					clearance = {{1,0}},
+					direction = action.Direction.UP -- enemy is hit at their left
 				}, {
 					-- Enemy is one tile further on the left than 2nd pattern
 					offset = {1, 2},
-					clearance = {{1,1}} -- Can't attack if there is something between enemy and player
+					clearance = {{1,1}, {1,0}}, -- Can't attack if there is something between enemy and player
+					direction = action.Direction.DOWN
 				}, {
 					-- Same, but enemy is on the right
 					offset = {1, -2},
-					clearance = {{1,-1}}
+					clearance = {{1,-1}, {1,0}},
+					direction = action.Direction.UP
 				} }
 			}
 		}
@@ -75,5 +80,9 @@ if dev then
 		object.spawn("blockchain_WeaponGoldBlockchain",0,0)
 		object.spawn("RingGold",0,0)
 		object.spawn("FeetBalletShoes",0,0)
+	end)
+	event.holderDealDamage.add("weaponInfo", { order="applyDamage" }, function(ev)
+		dbg(ev.entity.weaponType)
+		dbg(ev.entity.weaponPattern)
 	end)
 end
