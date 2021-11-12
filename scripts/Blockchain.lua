@@ -1,8 +1,11 @@
 local customWeapons     = require "necro.game.data.item.weapon.CustomWeapons"
-local commonWeapon      = require "necro.game.data.item.weapon.CommonWeapon"
 local event             = require "necro.event.Event"
 local currentLevel      = require "necro.game.level.CurrentLevel"
 local object            = require "necro.game.object.Object"
+local action            = require "necro.game.system.Action"
+local attack            = require "necro.game.character.Attack"
+
+dbg("(re)loaded")
 
 local dev = false
 
@@ -24,10 +27,31 @@ customWeapons.registerShape({
 	hint                    = "Dmg + with enough money, keep on killing for more gold",
 	components = {
 		weaponPattern = {
-			pattern = commonWeapon.pattern {
-				tiles = {
-					{ offset = { 1, 0 } }
-				}
+			pattern =  {
+				passWalls = true, swipe = "dagger",
+				dashDirection = action.Direction.RIGHT, -- Same direction as attack
+				direction = 7,
+				tiles = { {
+					-- Enemy exactly one tile in front of holder
+					offset = {1,0},
+					swipe = "dagger",
+					dashDirection = false, -- Useless, but more understandable
+				}, {
+					-- Enemy one tile away, diagonally (on the left)
+					offset = {1,1}
+				}, {
+					-- Enemy one tile away, diagonally (on the right).
+					-- Same pattern as the previous one, except offset(y) is negative
+					offset = {1,-1}
+				}, {
+					-- Enemy is one tile further on the left than 2nd pattern
+					offset = {1, 2},
+					clearance = {{1,1}} -- Can't attack if there is something between enemy and player
+				}, {
+					-- Same, but enemy is on the right
+					offset = {1, -2},
+					clearance = {{1,-1}}
+				} }
 			}
 		}
 	},
