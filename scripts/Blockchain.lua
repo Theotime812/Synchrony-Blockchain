@@ -4,10 +4,11 @@ local currentLevel      = require "necro.game.level.CurrentLevel"
 local object            = require "necro.game.object.Object"
 local action            = require "necro.game.system.Action"
 local attack            = require "necro.game.character.Attack"
+local components        = require "necro.game.data.Components"
 
-dbg("(re)loaded")
-
-local dev = true
+--[[ Notes
+--   I should use eventHandler holderKill. Put event after currencyMinimum (sequence = 1).
+--]]
 
 local function minGoldAmount()
 	--[[
@@ -20,6 +21,22 @@ local function minGoldAmount()
 	local commonRatio = 2
 	return init * commonRatio^(currentLevel.getDepth() - 1)
 end
+
+local function killComboMultipliedGold(killCombo,previousGoldCounter)
+	--[[
+		Calculates the amount of gold dropped by the enemy,
+		based on the kill combo. Multiplier increases by 0.5, rounded down,
+		at each kill. This new multiplier is applied last.
+	]]
+	return (killCombo*0.5+1)*previousGoldCounter
+end
+
+components.register {
+	killCombo = {
+		components.field.int("combo"),
+		components.field.int("lastCombo")
+	}
+}
 
 customWeapons.registerShape({
 	name                    = "Blockchain",
@@ -58,7 +75,8 @@ customWeapons.registerShape({
 					direction = action.Direction.UP
 				} }
 			}
-		}
+		},
+		blockchain_killCombo = { combo = 0, lastCombo = 0 }
 	},
 	texture                 = "mods/blockchain/gfx/texture.png",
 	excludeMaterials = {
@@ -75,14 +93,22 @@ event.holderDealDamage.add("goldAmountMultiplier", {order = "baseMultiplier", fi
 	end
 end)
 
-if dev then
-	event.levelLoad.add("spawn", {order="entities"}, function (ev)
-		object.spawn("blockchain_WeaponGoldBlockchain",0,0)
-		object.spawn("RingGold",0,0)
-		object.spawn("FeetBalletShoes",0,0)
-	end)
-	event.holderDealDamage.add("weaponInfo", { order="applyDamage" }, function(ev)
-		dbg(ev.entity.weaponType)
-		dbg(ev.entity.weaponPattern)
-	end)
-end
+event.holderKill.add("killComboMultiplier", {order="currencyMinimum", sequence=1, filter="blockchain_weaponTypeBlockchain"}, function(ev)
+	if ev.currency ~= nil then
+		-- Multiplies the gold drop by the new value, based on the kill combo
+		dbg("old amount "..ev.currency.amount)
+		ev.currency.amount = killComboMultipliedGold(ev.entity.blockchain_killCombo.combo,ev.currency.amount)
+		dbg("new amount "..ev.currency.amount)
+		-- Increments the kill combo
+		ev.entity.blockchain_killCombo.combo = ev.entity.blockchain_killCombo.combo + 1
+	end
+end)
+
+event.holderMoveResult.add("resetKillCounter", {order="itemCombo", filter="blockchain_killCombo"},function(ev)
+	-- If same combo for 2 beats -> not a kill combo anymore, no enemy died last beat
+	if ev.entity.blockchain_killCombo.combo == ev.entity.blockchain_killCombo.lastCombo then
+		ev.entity.blockchain_killCombo.combo = 0
+	end
+	ev.entity.blockchain_killCombo.lastCombo = ev.entity.blockchain_killCombo.combo
+end)
+
