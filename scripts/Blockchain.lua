@@ -6,9 +6,7 @@ local action            = require "necro.game.system.Action"
 local attack            = require "necro.game.character.Attack"
 local components        = require "necro.game.data.Components"
 
---[[ Notes
---   I should use eventHandler holderKill. Put event after currencyMinimum (sequence = 1).
---]]
+local dev = true
 
 local function minGoldAmount()
 	--[[
@@ -111,4 +109,16 @@ event.holderMoveResult.add("resetKillCounter", {order="itemCombo", filter="block
 	end
 	ev.entity.blockchain_killCombo.lastCombo = ev.entity.blockchain_killCombo.combo
 end)
+
+if dev then
+	event.levelLoad.add("spawn", {order="entities"}, function(ev)
+		object.spawn("blockchain_WeaponGoldBlockchain",0,0)
+		object.spawn("RingGold",0,0)
+		object.spawn("FeetBalletShoes",0,0)
+	end)
+
+	event.levelLoad.add("itemPoolInfo",{order="training",sequence=1}, function(ev)
+		dbg(ev)
+	end)
+end
 
