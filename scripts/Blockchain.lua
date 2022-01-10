@@ -74,7 +74,10 @@ customWeapons.registerShape({
 				} }
 			}
 		},
-		blockchain_killCombo = { combo = 0, lastCombo = 0 }
+		blockchain_killCombo = { combo = 0, lastCombo = 0 },
+		itemPoolBlackChest = { weights = {99999,20,0,0} },
+		itemPoolNeed = {},
+		itemPoolTransmute = {}
 	},
 	texture                 = "mods/blockchain/gfx/texture.png",
 	excludeMaterials = {
@@ -82,7 +85,21 @@ customWeapons.registerShape({
 		"Jeweled",
 		"Frost",
 		"Phasing",
-	}
+	},
+	modifier = function(ev)
+		dbg(ev)
+		if ev.material.name == "Blood" then
+			ev.entity.itemPoolBlackChest = { weights = {5,5,5,0} }
+		elseif ev.material.name == "Glass" then
+			ev.entity.itemPoolBlackChest = { weights = {0,0,2,20} }
+		elseif ev.material.name == "Golden" then
+			ev.entity.itemPoolBlackChest = { weights = {10,15,10,30} }
+		elseif ev.material.name == "Obsidian" then
+			ev.entity.itemPoolBlackChest = { weights = {0,0,0,30} }
+		elseif ev.material.name == "Titanium" then
+		ev.entity.itemPoolBlackChest = { weights = {0,0,15,0} }
+		end
+	end,
 })
 
 event.holderDealDamage.add("goldAmountMultiplier", {order = "baseMultiplier", filter = "blockchain_weaponTypeBlockchain"}, function(ev)
@@ -117,8 +134,5 @@ if dev then
 		object.spawn("FeetBalletShoes",0,0)
 	end)
 
-	event.levelLoad.add("itemPoolInfo",{order="training",sequence=1}, function(ev)
-		dbg(ev)
-	end)
 end
 
